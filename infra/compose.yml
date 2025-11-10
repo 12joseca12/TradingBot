@@ -1,0 +1,69 @@
+version: "3.9"
+services:
+  # 🔹 Base de datos PostgreSQL
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: bot
+      POSTGRES_PASSWORD: botpass
+      POSTGRES_DB: trading
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: always
+    ports:
+      - "5432:5432"
+
+  # 🔹 Redis cache / cola
+  redis:
+    image: redis:7-alpine
+    restart: always
+    ports:
+      - "6379:6379"
+
+  # 🔹 API de IA (FastAPI)
+  api:
+    build:
+      context: ./backend/api
+      dockerfile: ../../infra/docker/api.Dockerfile
+    ports:
+      - "8000:8000"
+    restart: always
+    depends_on:
+      - postgres
+      - redis
+
+  # 🔹 Worker multiusuario
+  worker:
+    build:
+      context: ./backend/worker
+      dockerfile: ../../infra/docker/worker.Dockerfile
+    restart: always
+    depends_on:
+      - api
+      - postgres
+      - redis
+
+  # 🔹 Dashboard privado (PiggyBank)
+  piggybank:
+    build:
+      context: ./dashboards/piggybank
+      dockerfile: ../../infra/docker/piggybank.Dockerfile
+    ports:
+      - "8081:3000"
+    restart: always
+    depends_on:
+      - api
+
+  # 🔹 Dashboard público (CryptoSignal)
+  cryptosignal:
+    build:
+      context: ./dashboards/cryptosignal
+      dockerfile: ../../infra/docker/cryptosignal.Dockerfile
+    ports:
+      - "8080:3000"
+    restart: always
+    depends_on:
+      - api
+
+volumes:
+  pgdata:
