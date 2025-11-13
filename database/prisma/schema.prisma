@@ -1,0 +1,111 @@
+generator client{
+    provider = "prisma-client-js"
+}
+
+datasource db{
+    provider = "postgresql"
+    url = env("DATABASE_URL")
+}
+
+model User {
+  id            String   @id @default(cuid())
+  email         String   @unique
+  password      String
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  isAffiliate   Boolean  @default(false)
+  affiliateCode String?  @unique
+  referredById  String?
+  referredBy    Affiliate? @relation("UserReferredByAffiliate", fields: [referredById], references: [id])
+
+  credentials   ApiCredential[]
+  settings      StrategySetting?
+  subscriptions Subscription[]
+  invoices      Invoice[]
+  affiliate     Affiliate? @relation("AffiliateUser")
+}
+
+model ApiCredential {
+  id        String   @id @default(cuid())
+  userId    String
+  exchange  String
+  apiKeyEnc String
+  apiSecEnc String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model StrategySetting {
+  userId          String   @id
+  symbols         String   @default("BTC/USDT,ETH/USDT,SOL/USDT")
+  riskPerTradePct Float    @default(0.002)
+  dailyStopPct    Float    @default(0.01)
+  slMult          Float    @default(2.0)
+  rrTP            Float    @default(1.4)
+  maxSimultaneous Int      @default(3)
+  forceFlatTime   String   @default("17:55")
+  botEnabled      Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Affiliate {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation("AffiliateUser", fields: [userId], references: [id], onDelete: Cascade)
+  code      String   @unique
+  createdAt DateTime @default(now())
+  referrals Referral[]
+  ledger    AffiliateLedgerEntry[]
+  referredUsers User[] @relation("UserReferredByAffiliate")
+}
+
+model Referral {
+  id             String   @id @default(cuid())
+  affiliateId    String
+  affiliate      Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  referredUserId String?
+  referredEmail  String
+  status         String   @default("PENDING")
+  createdAt      DateTime @default(now())
+}
+
+model Subscription {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan         String
+  status       String   @default("trialing")
+  trialEndsAt  DateTime?
+  createdAt    DateTime @default(now())
+  canceledAt   DateTime?
+  stripeSubId  String?  @unique
+}
+
+model Invoice {
+  id                  String   @id @default(cuid())
+  userId              String
+  user                User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeInvoiceId     String   @unique
+  amountCents         Int
+  currency            String   @default("eur")
+  paidAt              DateTime
+  createdAt           DateTime @default(now())
+  affiliateId         String?
+  affiliateShareCents Int      @default(0)
+}
+
+model AffiliateLedgerEntry {
+  id          String   @id @default(cuid())
+  affiliateId String
+  affiliate   Affiliate @relation(fields: [affiliateId], references: [id], onDelete: Cascade)
+  invoiceId   String?
+  amountCents Int
+  type        String   // CREDIT|ADJUSTMENT|PAYOUT
+  note        String?
+  createdAt   DateTime @default(now())
+  settled     Boolean  @default(false)
+  settledAt   DateTime?
+}
