@@ -1,1 +1,0 @@
-console.log("Worker running - ready to process signals");
