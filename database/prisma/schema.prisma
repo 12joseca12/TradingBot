@@ -27,7 +27,7 @@ model User {
   isAffiliate     Boolean  @default(false)
   affiliateCode   String?  @unique
   referredById    String?
-  referredBy      Affiliate? @relation("ReferredUsers", fields: [referredById], references: [id])
+  referredBy      Affiliate? @relation(fields: [referredById], references: [id])
 
   // Relación con estrategias
   settings        StrategySetting?
