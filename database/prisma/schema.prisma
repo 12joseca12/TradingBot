@@ -1,0 +1,165 @@
+// -------------------------------------------------------------
+// Prisma — TradingBot Database Schema
+// Versión: Final estable
+// -------------------------------------------------------------
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// -------------------------------------------------------------
+// MODELO DE USUARIOS
+// -------------------------------------------------------------
+model User {
+  id              String   @id @default(cuid())
+  email           String   @unique
+  password        String
+  phone           String?      // opcional
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  
+  // Afiliación
+  isAffiliate     Boolean  @default(false)
+  affiliateCode   String?  @unique
+  referredById    String?
+  referredBy      Affiliate? @relation("ReferredUsers", fields: [referredById], references: [id])
+
+  // Relación con estrategias
+  settings        StrategySetting?
+  credentials     ApiCredential[]
+  subscriptions   Subscription[]
+  invoices        Invoice[]
+
+  // Trading real (PiggyBank)
+  positions       Position[]
+  orders          Order[]
+}
+
+// -------------------------------------------------------------
+// AFILIADOS
+// -------------------------------------------------------------
+model Affiliate {
+  id            String    @id @default(cuid())
+  user          User?     @relation(fields: [userId], references: [id])
+  userId        String?
+  referredUsers User[]    @relation("ReferredUsers")
+  commissions   Commission[]
+}
+
+// Comisión generada por cada referido
+model Commission {
+  id            String   @id @default(cuid())
+  affiliateId   String
+  affiliate     Affiliate @relation(fields: [affiliateId], references: [id])
+  amount        Float
+  createdAt     DateTime @default(now())
+}
+
+// -------------------------------------------------------------
+// CREDENCIALES DE EXCHANGE (Kraken/Binance…)
+// -------------------------------------------------------------
+model ApiCredential {
+  id         String   @id @default(cuid())
+  userId     String
+  exchange   String
+  apiKeyEnc  String   // AES-256-GCM encrypted
+  apiSecEnc  String   // AES-256-GCM encrypted
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// -------------------------------------------------------------
+// CONFIGURACIÓN DE ESTRATEGIA POR USUARIO
+// -------------------------------------------------------------
+model StrategySetting {
+  userId             String    @id
+  user               User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  symbols            String    @default("BTC/USDT,ETH/USDT,SOL/USDT")
+
+  // Riesgo dinámico
+  riskMode           String    @default("moderado") // ultraModerado | normal | agresivo | ultra
+  minRiskPct         Float     @default(0.01)
+  maxRiskPct         Float     @default(0.05)
+
+  // Auto-escalado por confianza IA
+  autoScaleEnabled   Boolean   @default(true)
+
+  // Parámetros de trading
+  rrTP               Float     @default(1.4)
+  slMult             Float     @default(2.0)
+  dailyStopPct       Float     @default(0.01)
+  maxSimultaneous    Int       @default(3)
+  forceFlatTime      String    @default("17:55")
+
+  botEnabled         Boolean   @default(false)
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}
+
+// -------------------------------------------------------------
+// SUSCRIPCIONES (CryptoSignal SaaS)
+// -------------------------------------------------------------
+model Subscription {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan         String   // free | weekly | monthly | annual
+  status       String   // active | expired | cancelled
+  expiresAt    DateTime
+  createdAt    DateTime @default(now())
+}
+
+// -------------------------------------------------------------
+// FACTURAS (Stripe u otro)
+// -------------------------------------------------------------
+model Invoice {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount       Float
+  currency     String   @default("EUR")
+  createdAt    DateTime @default(now())
+}
+
+// -------------------------------------------------------------
+// POSICIONES DE TRADING (PiggyBank)
+// -------------------------------------------------------------
+model Position {
+  id           String   @id @default(cuid())
+  userId       String
+  symbol       String
+  size         Float
+  entryPrice   Float
+  stopLoss     Float?
+  takeProfit   Float?
+  mode         String   // ultra-moderado | normal | agresivo | ultra
+  status       String   @default("open") // open | closed | stopped | tp_hit
+  openedAt     DateTime @default(now())
+  closedAt     DateTime?
+
+  user         User     @relation(fields: [userId], references: [id])
+}
+
+// -------------------------------------------------------------
+// ÓRDENES (market/limit/SL/TP)
+// -------------------------------------------------------------
+model Order {
+  id           String   @id @default(cuid())
+  userId       String
+  symbol       String
+  type         String   // buy | sell | stop | takeprofit
+  price        Float?
+  amount       Float
+  status       String   @default("pending") // filled | cancelled
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  user         User     @relation(fields: [userId], references: [id])
+}

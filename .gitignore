@@ -1,205 +1,46 @@
-# ============================================================
-# 🔒 GENERAL — archivos sensibles y del sistema
-# ============================================================
+# Node
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+.next/
+dist/
 
-# Entornos y configuraciones
-.env
-.env.*
-*.env.local
-*.env.production
-*.env.development
-*.secret
-*.key
-*.pem
-
-# Claves o certificados
-*.crt
-*.csr
-*.p12
-*.pem
-*.jks
-*.keystore
-*.pfx
-
-# Archivos con contraseñas o tokens
-*token*
-*secret*
-*apikey*
-*api_key*
-*credentials*
-*private*
-
-# Archivos de sistema
-.DS_Store
-Thumbs.db
-desktop.ini
-.idea/
-.vscode/
-*.swp
-*.swo
-*.bak
-*.tmp
-*~
-
-# Archivos temporales
-*.log
-*.pid
-*.seed
-*.dump
-*.orig
-*.lock
-*.cache
-
-# ============================================================
-# 🐍 PYTHON / FASTAPI / IA
-# ============================================================
-
-# Entorno virtual
-venv/
-env/
-.venv/
-
-# Compilados Python
+# Python
 __pycache__/
-*.py[cod]
+*.pyc
 *.pyo
 *.pyd
+env/
+venv/
 
-# Archivos de build y paquetes
-*.egg
-*.egg-info/
-dist/
-build/
-wheels/
+# Prisma
+database/prisma/migrations/
 
-# Configuración de Jupyter y notebooks
-.ipynb_checkpoints/
-*.ipynb
+# Local environment
+.env
+*.env
+.env.*
 
-# Datos locales
-*.sqlite
-*.db
-*.pkl
-*.h5
-*.ckpt
-*.pt
-*.pth
+# IDE
+.vscode/
+.idea/
 
-# ============================================================
-# 🧱 NODE / REACT / NEXT.JS (PiggyBank + CryptoSignal)
-# ============================================================
+# Keys / Models / sensitive
+ml/model/
+ml/trained/
+backend/keys/
+worker/keys/
+secrets/
 
-# Dependencias
-node_modules/
-.pnp/
-.pnp.js
-
-# Build outputs
-.next/
-out/
-dist/
-build/
-
-# Archivos temporales Next.js
-*.next/
-.cache/
-.next-static/
-.vercel/
-.netlify/
-
-# Configuración de logs y coverage
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-coverage/
-*.lcov
-
-# Ambiente
-.env.local
-.env.development.local
-.env.test.local
-.env.production.local
-
-# ============================================================
-# 🐋 DOCKER / INFRA
-# ============================================================
-
-# Archivos de volúmenes o datos
-/data/
-volumes/
-pgdata/
-redisdata/
-db_backups/
-
-# Archivos intermedios
-*.tar
-*.gz
-*.zip
-*.tgz
-
-# Docker build cache y overrides
-**/Dockerfile~
-docker-compose.override.yml
-docker-compose.dev.yml
-docker-compose.local.yml
-
-# ============================================================
-# ⚙️ PRISMA / DATABASE
-# ============================================================
-
-# Prisma generado
-node_modules/.prisma/
-.prisma/
-prisma/migrations/
-prisma/dev.db
-prisma/test.db
-
-# ============================================================
-# 📈 LOGS / METRICS
-# ============================================================
-
+# Logs
 logs/
 *.log
-log/
-tmp/
-prometheus-data/
-grafana-data/
-grafana.db
-*.csv
 
-# ============================================================
-# ⚙️ BACKUPS / EXPORTS
-# ============================================================
+# Redis / Postgres
+database/redis-data/
+database/postgres-data/
 
-backups/
-exports/
-*.sql
-*.bak
-*.tar.gz
-*.tgz
-
-# ============================================================
-# 💾 IDEs / OS / CI
-# ============================================================
-
-# VSCode
-.vscode/*
-!.vscode/settings.json
-!.vscode/tasks.json
-!.vscode/launch.json
-!.vscode/extensions.json
-
-# PyCharm / IntelliJ
-.idea/
-*.iml
-*.iws
-
-# OS metadata
-.DS_Store
-*.lnk
-
-# GitHub Actions secrets
-.github/secrets/
-.github/workflows/*.secrets.yml
-
+# Build
+build/
+.cache/

@@ -1,0 +1,82 @@
+version: "3.9"
+
+services:
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: tradingbot_postgres
+    restart: always
+    environment:
+      POSTGRES_USER: bot
+      POSTGRES_PASSWORD: botpass
+      POSTGRES_DB: trading
+    volumes:
+      - ./database/postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7-alpine
+    container_name: tradingbot_redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - ./database/redis-data:/data
+
+  ml:
+    build: ./ml
+    container_name: tradingbot_ml
+    restart: always
+    ports:
+      - "8000:8000"
+    environment:
+      - TZ=Europe/Madrid
+      - MODEL_PATH=/app/model/latest.pt
+
+  worker:
+    build: ./worker
+    container_name: tradingbot_worker
+    restart: always
+    depends_on:
+      - postgres
+      - redis
+      - ml
+    environment:
+      DATABASE_URL: postgresql://bot:botpass@postgres:5432/trading?schema=public
+      REDIS_URL: redis://redis:6379
+      ML_URL: http://ml:8000
+      ENC_KEY_HEX: ${ENC_KEY_HEX}
+      JWT_SECRET: ${JWT_SECRET}
+
+  backend:
+    build: ./backend
+    container_name: tradingbot_backend
+    restart: always
+    depends_on:
+      - postgres
+    environment:
+      DATABASE_URL: postgresql://bot:botpass@postgres:5432/trading?schema=public
+      ENC_KEY_HEX: ${ENC_KEY_HEX}
+      JWT_SECRET: ${JWT_SECRET}
+      NEXT_PUBLIC_API_URL: http://localhost
+    ports:
+      - "3000:3000"
+
+  cryptosignal:
+    build: ./dashboards/cryptosignal
+    container_name: tradingbot_cryptosignal
+    restart: always
+    ports:
+      - "3001:3000"
+
+  piggybank:
+    build: ./dashboards/piggybank
+    container_name: tradingbot_piggybank
+    restart: always
+    ports:
+      - "3002:3000"
+
+volumes:
+  postgres-data:
+  redis-data:
