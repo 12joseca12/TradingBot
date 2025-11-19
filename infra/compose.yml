@@ -32,6 +32,15 @@ services:
       - postgres
       - redis
 
+  # 🔹 Servicio ML (FastAPI)
+  ml:
+    build:
+      context: ./ml
+      dockerfile: ../../infra/docker/ml.Dockerfile
+    ports:
+      - "8001:8000"
+    restart: always
+
   # 🔹 Worker multiusuario
   worker:
     build:
